@@ -215,7 +215,12 @@ static unsigned int search_servers(time_t now, struct all_addr **addrpp,
 		if (domainlen >= matchlen)
 		  {
 		    *type = serv->flags & (SERV_HAS_DOMAIN | SERV_USE_RESOLV | SERV_NO_REBIND);
-		    *domain = serv->domain;
+#ifdef HAVE_REGEX
+		    if (serv->flags & SERV_IS_REGEX)
+		      *domain = qdomain;
+            else
+#endif
+		      *domain = serv->domain;
 		    matchlen = domainlen;
 		    if (serv->flags & SERV_NO_ADDR)
 		      flags = F_NXDOMAIN;
