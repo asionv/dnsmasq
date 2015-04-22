@@ -519,6 +519,11 @@ struct server {
 struct ipsets {
   char **sets;
   char *domain;
+  #ifdef HAVE_REGEX
+  int flags;
+  pcre *regex;
+  pcre_extra *pextra;
+  #endif
   struct ipsets *next;
 };
 

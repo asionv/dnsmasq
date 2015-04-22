@@ -171,7 +171,7 @@ RESOLVFILE
 /* #define HAVE_DBUS */
 /* #define HAVE_IDN */
 /* #define HAVE_CONNTRACK */
-/* #define HAVE_REGEX */
+#define HAVE_REGEX 
 /* #define HAVE_DNSSEC */
 
 

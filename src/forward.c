@@ -274,6 +274,10 @@ static unsigned int search_servers(time_t now, struct all_addr **addrpp,
 static int match_domain_for_forward(char *domain, struct server *serv)
 {
   int ret_val = 0;
+  if (!domain)
+  {
+         return 0;
+  }  
   if(serv->flags & SERV_IS_REGEX)
     {
 #ifdef HAVE_REGEX
@@ -595,6 +599,30 @@ static size_t process_reply(struct dns_header *header, time_t now, struct server
       unsigned int matchlen = 0;
       for (ipset_pos = daemon->ipsets; ipset_pos; ipset_pos = ipset_pos->next) 
 	{
+#ifdef HAVE_REGEX
+       if (ipset_pos->flags & SERV_IS_REGEX)
+       {
+                unsigned int domainlen = 0;
+                char *matchstart = daemon->namebuff ;//+ namelen - domainlen;
+                int captcount = 0;
+                if (pcre_fullinfo(ipset_pos->regex, ipset_pos->pextra, PCRE_INFO_CAPTURECOUNT, &captcount) == 0)
+                {
+                        /* C99 dyn-array, or alloca must be used */
+                        int ovect[(captcount + 1) * 3];
+                        if (pcre_exec(ipset_pos->regex, ipset_pos->pextra, matchstart, namelen, 0, 0, ovect, (captcount + 1) * 3) > 0)
+                        {
+                            domainlen = (unsigned int) (ovect[1] - ovect[0]);
+                            if (domainlen >= matchlen)
+                            {
+                                matchlen = domainlen;
+                                sets = ipset_pos->sets;    
+                            }
+                        }
+                }
+      }
+      else
+  #endif
+     {
 	  unsigned int domainlen = strlen(ipset_pos->domain);
 	  char *matchstart = daemon->namebuff + namelen - domainlen;
 	  if (namelen >= domainlen && hostname_isequal(matchstart, ipset_pos->domain) &&
@@ -603,7 +631,8 @@ static size_t process_reply(struct dns_header *header, time_t now, struct server
 	    {
 	      matchlen = domainlen;
 	      sets = ipset_pos->sets;
-	    }
+    	}
+       }
 	}
     }
 #endif
